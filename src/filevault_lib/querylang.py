@@ -134,7 +134,7 @@ class Column:
                 for part in path:
                     column = column[part]
 
-                return column
+                return column.as_string()
 
         if self._name not in cls.__table__.columns.keys():
             raise ValueError(f"Unknown column: {self._name}")
