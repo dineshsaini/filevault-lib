@@ -133,7 +133,46 @@ The following accessors return the vault's configured paths or configuration obj
 
 Path accessors that depend on a resolved root return `None` when the root has not been resolved.
 
-## Configuration lifecycle
+## Configuration
+
+`filevault` supports an optional configuration file in **TOML format**. It allows users to override the library's built-in `Constants` without modifying the source code.
+
+The configuration filename must end with `.toml` or `.vaultconf`.
+
+### Configuration Structure
+
+Each vault has a unique `key`, which is used to identify the corresponding section in the TOML configuration file. Only the section matching the vault's key is used.
+
+```toml
+[my-vault]
+MAX_SHARD_SIZE = 1073741824
+MAX_FILE_SIZE_IN_SHARD = 20971520
+LOOSE_SHARD_SIZE = true
+```
+
+Here, `my-vault` represents the vault's key.
+
+All configuration attributes are optional. Users only need to specify the attributes they want to override. Any omitted attribute retains its built-in default value.
+
+### Constants
+
+The following attributes are available for configuration:
+
+| Attribute | Default Value | Description |
+|---|---:|---|
+| `NAMESPACE` | `"01a0f944-aa5f-72e5-8bc0-25bf1f7d4b78"` | UUID namespace used for generating namespaced identifiers. |
+| `MAX_SHARD_SIZE` | `1073741824` (1 GiB) | Maximum target size of a shard. |
+| `MAX_FILE_SIZE_IN_SHARD` | `20971520` (20 MiB) | Maximum file size allowed inside a shard. |
+| `LOOSE_SHARD_SIZE` | `true` | Allows flexible shard sizing beyond the configured target size. |
+| `BULK_OP` | `1024` | Batch size used for bulk operations. |
+| `CHUNKS` | `2097152` (2 MiB) | Chunk size used for file processing. |
+| `ARGON_MEMORY_KIB` | `8192` | Argon2 memory cost, in KiB. |
+| `ARGON_ITERATIONS` | `1` | Argon2 iteration count. |
+| `ARGON_LANES` | `1` | Argon2 parallelism parameter. |
+| `ENCODING` | `"UTF-8"` | Default text encoding. |
+| `SYNC_ON_CLOSE` | `false` | Controls whether data is synchronized when closing. |
+
+Users do not need to define every attribute in their configuration file. The built-in defaults are sufficient for normal operation, and the configuration file is only necessary when customization is required.
 
 ### `load()`
 
