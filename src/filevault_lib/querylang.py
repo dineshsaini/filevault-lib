@@ -36,6 +36,11 @@ class Type(Enum):
     ANY = "any"
 
 
+class Order(Enum):
+    ASC = "asc"
+    DESC = "desc"
+
+
 class Expr:                            # pylint: disable=too-few-public-methods
     lvalue: Any
     op: Any
@@ -134,7 +139,7 @@ class Column:
                 for part in path:
                     column = column[part]
 
-                return column
+                return column.as_string()
 
         if self._name not in cls.__table__.columns.keys():
             raise ValueError(f"Unknown column: {self._name}")
@@ -209,6 +214,7 @@ class Query:
     def __init__(self):
         self._type = Type.ANY
         self._condition = None
+        self._order_by = ()
 
     def on(self, target: Type) -> Query:
         if not isinstance(target, Type):
@@ -224,6 +230,19 @@ class Query:
 
         return self
 
+    def order_by(self, *order: tuple[Column, Order]) -> Query:
+        for c, o in order:
+            if not isinstance(c, Column):
+                raise ValueError("Invalid column.")
+
+            if not isinstance(o, Order):
+                raise ValueError("Invalid order.")
+
+        self._order_by = order
+
+        return self
+
+
     def to_sqla(self) -> SelectBase:
         stmts = []
 
@@ -235,12 +254,41 @@ class Query:
             models = (ObjectsTable, FilesTable, ShardsTable)
 
         for m in models:
+            cols = [m.key.label("key")]
+            if self._order_by:
+                order_cols = [
+                    c.compile(m).label(c._name.replace(".", "_"))
+                        for c, _ in self._order_by
+                ]
+                cols += order_cols
+
             stmts += [
-                select(m.key).where(self._condition.compile(m))
-                    if self._condition else select(m.key)
+                select(*cols).where(self._condition.compile(m))
+                    if self._condition else select(*cols)
             ]
 
-        return union(*stmts) if len(stmts) > 1 else stmts[0]
+        combined_union = union(*stmts) if len(stmts) > 1 else stmts[0]
+        subq = combined_union.subquery()
+        final_stmt = select(subq.c.key)
+
+        if self._order_by:
+            _ol = []
+            for c, o in self._order_by:
+                subq_col = subq.c[c._name.replace(".", "_")]
+                subq_col = (
+                    subq_col.asc() if o is Order.ASC else subq_col.desc()
+                )
+                subq_col = subq_col.nulls_last()
+                _ol.append(subq_col)
+
+            final_stmt = final_stmt.order_by(*_ol)
+
+        logger.debug(
+            "\n%s\n",
+            final_stmt.compile(compile_kwargs={"literal_binds": True})
+        )
+
+        return final_stmt
 
 
 def and_(*expressions: Expr) -> Expr:

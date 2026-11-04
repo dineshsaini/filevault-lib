@@ -301,6 +301,7 @@ def get_objects(
                 "compress_algo": obj.compress_algo,
                 "created_on": obj.created_on,
                 "modified_on": obj.modified_on,
+                "last_accessed_on": obj.last_accessed_on,
                 "enc_params": obj.enc_params
             }
         ) for obj in objs]
@@ -764,9 +765,7 @@ def get_zombie_and_orphan_shard_files(        # pylint: disable=too-many-locals
 def exec_query(
     session: Session,
     query: SelectBase
-) -> set[Any]:
-    return set(
-        session.scalars(query).all()
-    )
+) -> list[str]:
+    return session.scalars(query).all()
 
 
