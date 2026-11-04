@@ -68,7 +68,7 @@ vault = Vault(
 
 # Load the vault configuration, create the on-disk structure,
 # and open the vault.
-vault.load()
+vault.load(r"C:\Users\username\path\to\filevault.vaultconf")
 vault.create()
 vault.open()
 
