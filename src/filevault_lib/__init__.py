@@ -12,6 +12,7 @@ from filevault_lib.utils import (
 )
 from filevault_lib.querylang import (
     Type,
+    Order,
     Query,
     and_,
     or_,
@@ -23,5 +24,5 @@ from filevault_lib.querylang import (
 logger = logging.getLogger(__name__)
 
 
-__VERSION__ = "0.4.2"
+__VERSION__ = "0.4.3"
 

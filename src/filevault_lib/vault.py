@@ -1155,7 +1155,7 @@ class Vault:                          # pylint: disable=too-many-public-methods
                 query=query.to_sqla()
             )
 
-        return set(keys)
+        return keys
 
     def shell(self):
         raise NotImplementedError
